@@ -26,6 +26,7 @@ namespace Microsoft.Extensions.Hosting
         private List<Action<HostBuilderContext, IServiceCollection>> _configureServicesActions = new List<Action<HostBuilderContext, IServiceCollection>>();
         private List<IConfigureContainerAdapter> _configureContainerActions = new List<IConfigureContainerAdapter>();
         private IServiceFactoryAdapter _serviceProviderFactory = new ServiceFactoryAdapter<IServiceCollection>(new DefaultServiceProviderFactory());
+        private Func<IConfigurationBuilder> _configurationBuilderFactory = () => new ConfigurationBuilder();
         private bool _hostBuilt;
         private IConfiguration _hostConfiguration;
         private IConfiguration _appConfiguration;
@@ -75,6 +76,17 @@ namespace Microsoft.Extensions.Hosting
         public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
         {
             _configureServicesActions.Add(configureDelegate ?? throw new ArgumentNullException(nameof(configureDelegate)));
+            return this;
+        }
+
+        /// <summary>
+        /// Overrides the factory used to create the configuration builder.
+        /// </summary>
+        /// <param name="factory">A factory used for creating configuration builder.</param>
+        /// <returns>The same instance of the <see cref="IHostBuilder"/> for chaining.</returns>
+        public IHostBuilder UseConfigurationBuilderFactory(Func<IConfigurationBuilder> factory)
+        {
+            _configurationBuilderFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             return this;
         }
 
@@ -167,7 +179,7 @@ namespace Microsoft.Extensions.Hosting
 
         private void BuildHostConfiguration()
         {
-            IConfigurationBuilder configBuilder = new ConfigurationBuilder()
+            IConfigurationBuilder configBuilder = _configurationBuilderFactory();
                 .AddInMemoryCollection(); // Make sure there's some default storage since there are no default providers
 
             foreach (Action<IConfigurationBuilder> buildAction in _configureHostConfigActions)
@@ -219,7 +231,7 @@ namespace Microsoft.Extensions.Hosting
 
         private void BuildAppConfiguration()
         {
-            IConfigurationBuilder configBuilder = new ConfigurationBuilder()
+            IConfigurationBuilder configBuilder = _configurationBuilderFactory();
                 .SetBasePath(_hostingEnvironment.ContentRootPath)
                 .AddConfiguration(_hostConfiguration, shouldDisposeConfiguration: true);
 

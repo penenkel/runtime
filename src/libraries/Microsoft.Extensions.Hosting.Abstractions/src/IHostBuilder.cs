@@ -46,6 +46,13 @@ namespace Microsoft.Extensions.Hosting
         IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate);
 
         /// <summary>
+        /// Overrides the factory used to create the configuration builder.
+        /// </summary>
+        /// <param name="factory">A factory used for creating configuration builder.</param>
+        /// <returns>The same instance of the <see cref="IHostBuilder"/> for chaining.</returns>
+        IHostBuilder UseConfigurationBuilderFactory(Func<IConfigurationBuilder> factory);
+
+        /// <summary>
         /// Overrides the factory used to create the service provider.
         /// </summary>
         /// <typeparam name="TContainerBuilder">The type of builder.</typeparam>
